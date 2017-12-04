@@ -12,13 +12,19 @@ public class Config {
 	public static int balanceSpaceID = 512;
 	public static int transactionsSpaceID = 513;
 	public static int spendsSpaceID = 514;
-	public static int campaignMapSpaceID = 515;
+	
+	
+//	public static int campaignDailySpendsID = 525;
+//	public static int advertiserLedgerID = 526;
+//	public static int advertiserCamapignMapID = 527;
 //
 //	// stored procedure parameters used for queries in local machine
 //	public static int advertiserId = 1;
 //	public static int campaignId = 2;
 //	public static int balanceDate = 5555;
 	
+//	index constants
+	public static int indexIteratorEqual = 0;
 //##########################################################################
 	
 //	Config for use in production node
@@ -33,5 +39,8 @@ public class Config {
 	public static int campaignId = 2118232;
 	public static int balanceDate = 20171121;
 	
+	public static int campaignDailySpendsID = 514;
+	public static int advertiserLedgerID = 513;
+	public static int advertiserCamapignMapID = 515;
 	public static String logName = "";
 }

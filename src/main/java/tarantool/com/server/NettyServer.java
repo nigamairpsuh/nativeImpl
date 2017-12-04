@@ -27,14 +27,12 @@ public class NettyServer {
 					Config.username = args[i].split("=")[1];
 				} else if (args[i].startsWith("password")) {
 					Config.password = args[i].split("=")[1];
-				} else if (args[i].startsWith("balanceSpaceID")) {
-					Config.balanceSpaceID = Integer.parseInt(args[i].split("=")[1]);
-				} else if (args[i].startsWith("transactionsSpaceID")) {
-					Config.transactionsSpaceID = Integer.parseInt(args[i].split("=")[1]);
-				} else if (args[i].startsWith("spendsSpaceID")) {
-					Config.spendsSpaceID = Integer.parseInt(args[i].split("=")[1]);
-				} else if (args[i].startsWith("campaignMapSpaceID")) {
-					Config.campaignMapSpaceID = Integer.parseInt(args[i].split("=")[1]);
+				} else if (args[i].startsWith("campaignDailySpendsID")) {
+					Config.campaignDailySpendsID = Integer.parseInt(args[i].split("=")[1]);
+				} else if (args[i].startsWith("advertiserLedgerID")) {
+					Config.advertiserLedgerID = Integer.parseInt(args[i].split("=")[1]);
+				} else if (args[i].startsWith("advertiserCamapignMapID")) {
+					Config.advertiserCamapignMapID = Integer.parseInt(args[i].split("=")[1]);
 				} 
 			}
 		}

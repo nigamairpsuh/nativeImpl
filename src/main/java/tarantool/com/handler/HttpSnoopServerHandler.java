@@ -151,7 +151,7 @@ public class HttpSnoopServerHandler extends SimpleChannelInboundHandler<Object> 
 			}
 		}
 
-		 TaranToolClientUtil.getDetailedCampaign();
+		 TaranToolClientUtil.getDetailedCampaign(Config.advertiserId, Config.campaignId, Config.balanceDate);
 	}
 
 	private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
