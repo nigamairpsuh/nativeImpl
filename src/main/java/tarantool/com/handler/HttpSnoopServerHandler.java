@@ -44,6 +44,7 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
+import tarantool.com.client.ExecuteQuery;
 import tarantool.com.client.TaranToolClientUtil;
 import tarantool.com.config.Config;
 
@@ -151,7 +152,7 @@ public class HttpSnoopServerHandler extends SimpleChannelInboundHandler<Object> 
 			}
 		}
 
-		 TaranToolClientUtil.getDetailedCampaign(Config.advertiserId, Config.campaignId, Config.balanceDate);
+		 new ExecuteQuery().getDetailedCampaign(Config.advertiserId, Config.campaignId, Config.balanceDate);
 	}
 
 	private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
