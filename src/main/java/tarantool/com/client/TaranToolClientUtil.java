@@ -69,7 +69,13 @@ public class TaranToolClientUtil {
 			
 //			QUERY DATA FROM vw_with_nfr_aggr_campaign_daily_transactions
 			long queryStartTime = startTime;
-//			third index = 2  (2nd argument) , offset=0
+//			parameters for select function-
+//			param1 : spaceId
+//			param2 : index number
+//			param3 : list of keys
+//			param4 : offset
+//			param5 : limit of records returned
+//			param6 : iterator type
 			List campaignSpendsData = client.syncOps().select(Config.campaignDailySpendsID, 2, Arrays.asList(advertiserId, campaingId, balanceDate),
 					0, Integer.MAX_VALUE, Config.indexIteratorEqual);
 			if (campaignSpendsData.size() == 0)
