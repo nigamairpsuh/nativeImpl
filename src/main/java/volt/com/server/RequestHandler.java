@@ -1,4 +1,4 @@
-package tarantool.com.server;
+package volt.com.server;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

@@ -1,4 +1,4 @@
-package tarantool.com.handler;
+package volt.com.handler;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -16,7 +16,6 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TimeZone;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -44,15 +43,14 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
-import tarantool.com.client.ExecuteQuery;
-import tarantool.com.client.TaranToolClientUtil;
-import tarantool.com.config.Config;
+import volt.com.client.ExecuteQuery;
+import volt.com.server.NettyServer;
 
 public class HttpSnoopServerHandler extends SimpleChannelInboundHandler<Object> {
 	public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
 	public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
 	public static final int HTTP_CACHE_SECONDS = 60;
-	
+
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) {
 		ctx.flush();
@@ -69,10 +67,10 @@ public class HttpSnoopServerHandler extends SimpleChannelInboundHandler<Object> 
 			String filename = "loaderio-fbe3a1e6ef2f4ae69f460c0ae454538b.txt";
 			if (uri.endsWith(filename)) {
 				try {
-					
-				    File file = new File("../../../"+filename);					
+
+					File file = new File("../../../" + filename);
 					RandomAccessFile raf;
-			
+
 					raf = new RandomAccessFile(file, "r");
 					long fileLength = raf.length();
 					HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
@@ -83,44 +81,43 @@ public class HttpSnoopServerHandler extends SimpleChannelInboundHandler<Object> 
 						response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
 					}
 
-					
 					// Write the initial line and the header.
 					ctx.write(response);
-					
-					 ChannelFuture sendFileFuture;
-					          ChannelFuture lastContentFuture;
-					          if (ctx.pipeline().get(SslHandler.class) == null) {
-					              sendFileFuture =
-					                      ctx.write(new DefaultFileRegion(raf.getChannel(), 0, fileLength), ctx.newProgressivePromise());
-					              // Write the end marker.
-					              lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-					          } else {
-					              sendFileFuture =
-					                      ctx.writeAndFlush(new HttpChunkedInput(new ChunkedFile(raf, 0, fileLength, 8192)),
-					                              ctx.newProgressivePromise());
-					              // HttpChunkedInput will write the end marker (LastHttpContent) for us.
-					              lastContentFuture = sendFileFuture;
-					          }
-					  
-					          sendFileFuture.addListener(new ChannelProgressiveFutureListener() {
-					              public void operationProgressed(ChannelProgressiveFuture future, long progress, long total) {
-					                  if (total < 0) { // total unknown
-					                      System.err.println(future.channel() + " Transfer progress: " + progress);
-					                  } else {
-					                      System.err.println(future.channel() + " Transfer progress: " + progress + " / " + total);
-					                  }
-					              }
-					  
-					              public void operationComplete(ChannelProgressiveFuture future) {
-					                  System.err.println(future.channel() + " Transfer complete.");
-					              }
-					          });
-					 
+
+					ChannelFuture sendFileFuture;
+					ChannelFuture lastContentFuture;
+					if (ctx.pipeline().get(SslHandler.class) == null) {
+						sendFileFuture = ctx.write(new DefaultFileRegion(raf.getChannel(), 0, fileLength),
+								ctx.newProgressivePromise());
+						// Write the end marker.
+						lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+					} else {
+						sendFileFuture = ctx.writeAndFlush(
+								new HttpChunkedInput(new ChunkedFile(raf, 0, fileLength, 8192)),
+								ctx.newProgressivePromise());
+						// HttpChunkedInput will write the end marker
+						// (LastHttpContent) for us.
+						lastContentFuture = sendFileFuture;
+					}
+
+					sendFileFuture.addListener(new ChannelProgressiveFutureListener() {
+						public void operationProgressed(ChannelProgressiveFuture future, long progress, long total) {
+							if (total < 0) { // total unknown
+								System.err.println(future.channel() + " Transfer progress: " + progress);
+							} else {
+								System.err
+										.println(future.channel() + " Transfer progress: " + progress + " / " + total);
+							}
+						}
+
+						public void operationComplete(ChannelProgressiveFuture future) {
+							System.err.println(future.channel() + " Transfer complete.");
+						}
+					});
+
 				} catch (FileNotFoundException ignore) {
 					ignore.printStackTrace();
 					sendError(ctx, NOT_FOUND);
-
-					
 
 					return;
 				} catch (IOException e) {
@@ -131,28 +128,12 @@ public class HttpSnoopServerHandler extends SimpleChannelInboundHandler<Object> 
 			} else {
 				QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri);
 				Map<String, List<String>> params = queryStringDecoder.parameters();
-				if (!params.isEmpty()) {
-					for (Entry<String, List<String>> p : params.entrySet()) {
-						String key = p.getKey();
-						List<String> vals = p.getValue();
-						for (String val : vals) {
-							if ("campaignId".equals(key)) {
-								Config.campaignId = Integer.parseInt(val);
-							} else if ("advertiserId".equals(key)) {
-								Config.advertiserId = Integer.parseInt(val);
-							} else if ("balanceDate".equals(key)) {
-								Config.balanceDate = Integer.parseInt(val);
-							}else if ("logname".equals(key)) {
-								Config.logName = val;
-							}
 
-						}
-					}
-				}
 			}
 		}
+		NettyServer.counter++;
+		new ExecuteQuery().getDetailedCampaign(NettyServer.counter);
 
-		 new ExecuteQuery().getDetailedCampaign(Config.advertiserId, Config.campaignId, Config.balanceDate);
 	}
 
 	private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
@@ -165,31 +146,30 @@ public class HttpSnoopServerHandler extends SimpleChannelInboundHandler<Object> 
 	}
 
 	private static void setDateAndCacheHeaders(HttpResponse response, File fileToCache) {
-		         SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
-		         dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
-		 
-		         // Date header
-		         Calendar time = new GregorianCalendar();
-		         response.headers().set(HttpHeaderNames.DATE, dateFormatter.format(time.getTime()));
-		 
-		         // Add cache headers
-		         time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
-		         response.headers().set(HttpHeaderNames.EXPIRES, dateFormatter.format(time.getTime()));
-		         response.headers().set(HttpHeaderNames.CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
-		         response.headers().set(
-		                 HttpHeaderNames.LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
-		     }
-	
-	
+		SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
+		dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
+
+		// Date header
+		Calendar time = new GregorianCalendar();
+		response.headers().set(HttpHeaderNames.DATE, dateFormatter.format(time.getTime()));
+
+		// Add cache headers
+		time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
+		response.headers().set(HttpHeaderNames.EXPIRES, dateFormatter.format(time.getTime()));
+		response.headers().set(HttpHeaderNames.CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
+		response.headers().set(HttpHeaderNames.LAST_MODIFIED,
+				dateFormatter.format(new Date(fileToCache.lastModified())));
+	}
+
 	private static void setContentTypeHeader(HttpResponse response, File file) {
-		        MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
-		        response.headers().set(HttpHeaderNames.CONTENT_TYPE, mimeTypesMap.getContentType(file.getPath()));
-		     }
-	
+		MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
+		response.headers().set(HttpHeaderNames.CONTENT_TYPE, mimeTypesMap.getContentType(file.getPath()));
+	}
+
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		cause.printStackTrace();
 		ctx.close();
 	}
-	
+
 }

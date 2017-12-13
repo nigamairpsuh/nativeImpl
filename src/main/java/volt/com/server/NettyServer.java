@@ -1,4 +1,4 @@
-package tarantool.com.server;
+package volt.com.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -8,10 +8,10 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
-import tarantool.com.config.Config;
+import volt.com.config.Config;
 
 public class NettyServer {
-
+	public static int counter=0;
 	public static void main(String[] args) throws Exception {
 	
 		// override default configuration parameters
